@@ -1,0 +1,67 @@
+import java.io.File;
+import java.io.IOException;
+import com.sterlingcommerce.woodstock.workflow.Document;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+import java.io.BufferedReader;
+Document document = new Document();
+try{
+  File file = new File("/B2B_DOUGLAS/");
+  StringBuffer contents = new StringBuffer();
+  SimpleDateFormat sdf = new SimpleDateFormat("HH:mm:ss");
+  long lastModified = 0;
+  long lastModifiedHour = 0;
+  long lastModifiedMinute = 0;
+  long lastModifiedSecond = 0;
+  long currentTimeHour = 0;
+  long currentTimeMinute = 0;
+  long currentTimeSecond = 0;
+  long diffHours  = 0;
+  long diffSecond = 0;
+  String[] currentTimeParts = null;
+  String[] lastModifiedParts = null;
+  if (file.isDirectory()){
+    String[] fileList = file.list();
+    for (int i=0; i<fileList.length; i++){
+      if(fileList[i].endsWith(".xml")){
+         file = new File("/B2B_DOUGLAS/"+fileList[i]);
+         Date currentTime = Calendar.getInstance().getTime();
+         String formatedCurrentTime = sdf.format(currentTime);
+         lastModified = file.lastModified();
+         String formatedLastModified  = sdf.format(new Date(lastModified));
+         lastModifiedParts = formatedLastModified.split(":");
+         lastModifiedHour = Long.parseLong(lastModifiedParts[0]);
+         lastModifiedMinute = Long.parseLong(lastModifiedParts[1]);
+         lastModifiedSecond = Long.parseLong(lastModifiedParts[2]);
+         currentTimeParts = formatedCurrentTime.split(":");
+         currentTimeHour = Long.parseLong(currentTimeParts[0]);
+         currentTimeMinute = Long.parseLong(currentTimeParts[1]);
+         currentTimeSecond = Long.parseLong(currentTimeParts[2]);
+         diffHours = currentTimeHour - lastModifiedHour ;
+         diffSecond = currentTimeSecond - lastModifiedSecond;
+         if((int) Math.abs(diffHours)>=1){
+           contents.append(fileList[i]+"\n");
+         }else if((int) Math.abs(diffSecond)>=20){
+           contents.append(fileList[i]+"\n");
+         }
+      }
+   }
+  }
+  if(contents != null & !contents.toString().equals("")){
+    document = wfc.newDocument();
+    document.setBody(contents.toString().getBytes());
+    wfc.setAdvancedStatus("Finish!");
+    wfc.setBasicStatus(000);
+    wfc.putPrimaryDocument(document);
+    log.log("B2B Reprocessamento Automatico : " + contents.toString() );
+  }
+}catch(Exception ex){
+  log.log("Fail to automatic reprocess " + ex.getMessage());
+}
+return "000";
